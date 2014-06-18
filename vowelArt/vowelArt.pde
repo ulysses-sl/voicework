@@ -1,7 +1,8 @@
 /*
  * Naive-Bayes classifier for vowel sound recognition
  *
- * Sak Lee  Copyright 2014 All rights reserved
+ * Sak Lee  mail@saklee.net
+ * Copyright 2014 All rights reserved
  */
 import ddf.minim.*;
 import ddf.minim.analysis.*;
