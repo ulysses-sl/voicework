@@ -1,6 +1,10 @@
+/*
+ * Naive-Bayes classifier for vowel sound recognition
+ *
+ * Sak Lee  Copyright 2014 All rights reserved
+ */
 import ddf.minim.*;
 import ddf.minim.analysis.*;
-import ddf.minim.effects.*;
 
 final float[] aProb = {
   0.62816,
