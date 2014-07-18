@@ -3,6 +3,9 @@
  *
  * Sak Lee  mail@saklee.net
  * Copyright 2014 All rights reserved
+ *
+ *
+ * TODO: two ArrayList implementation to fight GC stop-the-world
  */
 import ddf.minim.*;
 import ddf.minim.analysis.*;
@@ -36,12 +39,12 @@ final float[] oProb = {
 };
 
 final float[] xProb = {
-  0.5, 0.5, 0.5, 0.5, 0.5,
-  0.5, 0.5, 0.5, 0.5, 0.5,
-  0.5, 0.5, 0.5, 0.5, 0.5,
-  0.5, 0.5, 0.5, 0.5, 0.5,
-  0.5, 0.5, 0.5, 0.5, 0.5,
-  0.5, 0.5, 0.5, 0.5, 0.5,
+  0.6, 0.6, 0.6, 0.6, 0.6,
+  0.6, 0.6, 0.6, 0.6, 0.6,
+  0.6, 0.6, 0.6, 0.6, 0.6,
+  0.6, 0.6, 0.6, 0.6, 0.6,
+  0.6, 0.6, 0.6, 0.6, 0.6,
+  0.6, 0.6, 0.6, 0.6, 0.6,
 };
 
 Minim minim;
@@ -230,19 +233,14 @@ void resetP()
 
 void shootBars()
 {
-  if (mic.mix.level() > 0.01)
+  if (mic.mix.level() > 0.009)
   {
-    for (int i = 0; i < fft.specSize(); i++)
-    {
-      analysisArr[i] += fft.getBand(i);
-    }
     for (int i = 0; i < bandLimit; i++)
     {
-      freqBars[i].addImpulse(0, -1000 * (float) analysisArr[i] * mic.mix.level());
-    }
-    for (int i = 0; i < bandAll; i++)
-    {
-      analysisArr[i] = 0;
+      float barHeight = height / 2 * fft.getBand(i) * mic.mix.level() + 10;
+      freqBars[i].setHeight(barHeight);
+      freqBars[i].setFill(64 * barHeight / height + 32);
+      freqBars[i].setPosition(dist / 2 + i * dist, height - 20 - barHeight / 2);     
     }
   }
 }
@@ -253,34 +251,99 @@ void shootBall()
   float fI = (float) pI;
   float fO = (float) pO;
   float fX = (float) pX;
-  if (mic.mix.level() < 0.01)
+  if (volAvg < 0.009)
   {
-  }
-  else if (fX >= max(fA, fI, fO))
-  {
-    FSoundBall temp = new FSoundBall(mic.mix.level() * 1000, "?", 255, 0);
-    temp.setPosition(width/2, height/4);
-    world.add(temp);
-    balls.add(temp);
-  }
-  else if (fA >= max(fI, fO))
-  {
-    FSoundBall temp = new FSoundBall(mic.mix.level() * 1000, "ah", 255, 0);
-    temp.setPosition(width/2, height/4);
-    world.add(temp);
-    balls.add(temp);
-  }
-  else if (fI >= fO)
-  {
-    FSoundBall temp = new FSoundBall(mic.mix.level() * 1000, "ee", 255, 0);
-    temp.setPosition(width/2, height/4);
-    world.add(temp);
-    balls.add(temp);
+    /* nuthin' */
   }
   else
   {
-    FSoundBall temp = new FSoundBall(mic.mix.level() * 1000, "oh", 255, 0);
+    FSoundBall temp = ballPool.remove(0);/*
+    println(Float.toString(fX));
+    println(Float.toString(fA));
+    println(Float.toString(fI));
+    println(Float.toString(fO));*/
+    if (fA < 0.75 && fI < 0.75 && fO < 0.55)
+    {
+      float dice = random(100);
+      if (dice < 25)
+      {
+      temp.reset(volAvg * 1000, ">", 0, 255);
+      }
+      else if (dice < 50)
+      {
+      temp.reset(volAvg * 1000, ";", 0, 255);
+      }
+      else if (dice < 75)
+      {
+      temp.reset(volAvg * 1000, "#", 0, 255);
+      }
+      else
+      {
+      temp.reset(volAvg * 1000, "&", 0, 255);
+      }
+    }
+    else if (fA >= max(fI, fO))
+    {
+      float dice = random(100);
+      if (dice < 15)
+      {
+      temp.reset(volAvg * 1000, "哈", 0, 255);
+      }
+      else if (dice < 30)
+      {
+      temp.reset(volAvg * 1000, "啊", 0, 255);
+      }
+      else if (dice < 45)
+      {
+      temp.reset(volAvg * 1000, "呵", 0, 255);
+      }
+      else
+      {
+      temp.reset(volAvg * 1000, "ah", 0, 255);
+      }
+    }
+    else if (fI >= fO)
+    {
+      float dice = random(100);
+      if (dice < 15)
+      {
+      temp.reset(volAvg * 1000, "咿", 0, 255);
+      }
+      else if (dice < 30)
+      {
+      temp.reset(volAvg * 1000, "噫", 0, 255);
+      }
+      else if (dice < 45)
+      {
+      temp.reset(volAvg * 1000, "咦", 0, 255);
+      }
+      else
+      {
+      temp.reset(volAvg * 1000, "ee", 0, 255);
+      }
+    }
+    else
+    {
+      float dice = random(100);
+      if (dice < 15)
+      {
+      temp.reset(volAvg * 1000, "喔", 0, 255);
+      }
+      else if (dice < 30)
+      {
+      temp.reset(volAvg * 1000, "噢", 0, 255);
+      }
+      else if (dice < 45)
+      {
+      temp.reset(volAvg * 1000, "哦", 0, 255);
+      }
+      else
+      {
+      temp.reset(volAvg * 1000, "oh", 0, 255);
+      }
+    }
     temp.setPosition(width/2, height/4);
+    temp.setRotation(random(2 * PI));
     world.add(temp);
     balls.add(temp);
   }
@@ -311,6 +374,21 @@ public class FSoundBall extends FCircle
     life = maxLife;
     bodyColor = bc;
     textColor = tc;
+    setVelocity(0, 0);
+    setAngularVelocity(0);
+  }
+
+  public void reset(float size, String text, int bc, int tc)
+  {
+    m_size = Fisica.screenToWorld(size);
+    tag = text;
+    maxLife = 600 - (int) size;
+    life = maxLife;
+    bodyColor = bc;
+    textColor = tc;
+    setVelocity(0, 0);
+    setAngularVelocity(0);
+    resetForces();
   }
 
   public void draw(PGraphics applet)
@@ -320,11 +398,15 @@ public class FSoundBall extends FCircle
     if (m_image != null ) {
       drawImage(applet);
     } else {
-      applet.fill(bodyColor * life / maxLife);
+      //applet.fill(bodyColor * life / maxLife, 0);
+      applet.fill(bodyColor, 0);
+      applet.noStroke();
       applet.ellipse(0, 0, getSize(), getSize());
-      applet.textSize(getSize()/2);
-      applet.fill(textColor);
-      applet.text(tag, 0, 0);
+      int tsize = (int) (getSize() * 2 / 3);
+      applet.textSize(tsize);
+      applet.textFont(fonts[tsize/20 + 1]);
+      applet.fill(textColor * life / maxLife);
+      applet.text(tag, 0, -0.08 * getSize());
     }
     life--;
 
@@ -335,12 +417,15 @@ public class FSoundBall extends FCircle
   {
     preDrawDebug(applet);
         
-    applet.fill(bodyColor);
+    //applet.fill(bodyColor * life / maxLife, 0);
+    applet.fill(bodyColor, 0);
     applet.ellipse(0, 0, getSize(), getSize());
     applet.line(0, 0, getSize()/2, 0);
-    applet.textSize(getSize()/2);
-    applet.fill(textColor);
-    applet.text(tag, 0, 0);
+    int tsize = (int) (getSize() * 2 / 3);
+    applet.textSize(tsize);
+    applet.textFont(fonts[tsize/20 + 1]);
+    applet.fill(textColor * life / maxLife);
+    applet.text(tag, 0, -0.08 * getSize());
 
     postDrawDebug(applet);
   }
@@ -367,15 +452,24 @@ public class FSoundBall extends FCircle
 }
 
 FWorld world;
-ArrayList<FSoundBall> balls;
+ArrayList<FSoundBall> balls, ballPool;
 FBox[] freqBars;
 boolean[] freqBarsReset;
 int counter;
-float dist;
+float dist, volAvg;
+PFont myFont;
+PFont[] fonts;
+
+/*boolean sketchFullScreen()
+{
+  return true;
+}*/
 
 void setup()
 {
-  size(1000, 700);
+  //size(displayWidth, displayHeight, P2D);
+  size(1366, 730, P2D);
+  noCursor();
   Fisica.init(this);
   world = new FWorld();
   world.setEdges();
@@ -383,6 +477,15 @@ void setup()
   
   ellipseMode(CENTER);
   textAlign(CENTER, CENTER);
+  imageMode(CENTER);
+  noCursor();
+  //myFont = createFont("WenQuanYi Micro Hei", 32);
+  //textFont(myFont);
+  fonts = new PFont[50];
+  for (int i = 1; i < 50; i++)
+  {
+    fonts[i] = createFont("WenQuanYi Micro Hei", i * 20);
+  }
 
   analysisArr = new double[bandAll];
 
@@ -393,16 +496,24 @@ void setup()
   fft.forward(mic.mix);
 
   balls = new ArrayList<FSoundBall>();
+  ballPool = new ArrayList<FSoundBall>();
   balls.ensureCapacity(40);
+  ballPool.ensureCapacity(120);
+  for (int i = 0; i < 100; i++)
+  {
+    ballPool.add(new FSoundBall(1000, "meh", 0, 0));
+  }
   freqBars = new FBox[bandLimit];
   freqBarsReset = new boolean[bandLimit];
 
   dist = width / bandLimit;
   for (int i = 0; i < bandLimit; i++)
   {
-    freqBars[i] = new FBox(dist * 0.2, 10);
+    freqBars[i] = new FBox(dist * 0.5, 10);
     freqBars[i].setRotatable(false);
-    freqBars[i].setPosition(dist + i * dist, height - 20);
+    freqBars[i].setStatic(true);
+    freqBars[i].setPosition(dist / 2 + i * dist, height - 20);
+    freqBars[i].setFill(191 * freqBars[i].getHeight() / height + 64);
     world.add(freqBars[i]);
   }
 }
@@ -436,11 +547,13 @@ void draw()
     line(freqBars[i].getX(), freqBars[i].getY(), freqBars[i+1].getX(), freqBars[i+1].getY());
   }
 
+  volAvg += mic.mix.level();
   adjustP();
   shootBars();
   counter++;
   if (counter == 10)
   {
+    volAvg /= 10;
     counter = 0;
     shootBall();
     resetP();
@@ -457,45 +570,60 @@ void draw()
     if (ball.isDead())
     {
       world.remove(ball);
+      ballPool.add(ball);
       balls.remove(ball);
     }
   }
 
   temp = null;
+  textSize(20);
+  text("Sak Lee & Prof. Wenhua Shi", 150, 30);
+
 }
 
 void contactStarted(FContact contact)
 {
   for (int i = 0; i < bandLimit; i++)
   {
-    if (contact.contains(freqBars[i]))
+    ArrayList<FBody> tempBodies = (ArrayList<FBody>) freqBars[i].getTouching();
+    for (FBody ball : tempBodies)
     {
-      freqBars[i].addImpulse(0, -400);
-      freqBarsReset[i] = true;
+      ball.addImpulse(0, -1 * freqBars[i].getHeight());
     }
-  }
+  }/*
   for (FSoundBall ball : balls)
   {
     if (contact.contains(ball) && contact.contains(world.bottom))
     {
-      ball.addImpulse(0, -800);
+      ball.addImpulse(0, -1200);
     }
-  }
+    else
+    {
+      for (int i = 0; i < bandLimit; i++)
+      {
+        if (contact.contains(ball) && bodycontact.contains(freqBars[i]))
+        {
+          ball.addImpulse(0, -1 * freqBars[i].getHeight());
+        }
+      }
+    }
+  }*/
 }
 
 void contactPersisted(FContact contact)
 {
-
+  for (int i = 0; i < bandLimit; i++)
+  {
+    ArrayList<FBody> tempBodies = (ArrayList<FBody>) freqBars[i].getTouching();
+    for (FBody ball : tempBodies)
+    {
+      ball.addImpulse(0, -1 * freqBars[i].getHeight());
+    }
+  }
 }
 
 void contactEnded(FContact contact)
 {
-  for (int i = 0; i < bandLimit; i++)
-  {
-    if (contact.contains(freqBars[i]))
-    {
-    }
-  }
   for (FSoundBall ball : balls)
   {
     if (contact.contains(ball) && contact.contains(world.bottom))
